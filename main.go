@@ -1,35 +1,43 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
+	"io/ioutil"
 	"log"
+	"net/http"
 	_ "os"
 	"reflect"
-	"unsafe"
-
-	//"io"
-	"net/http"
 	"time"
+	"unsafe"
 )
 
-type Event struct{
-	id string
-	title string
-	description string
-	name string
-	time string
-	timezone string
-	duration uint32
-	notes []string
+type User struct{
+	Name string `json:"Username"`
+	Pass string `json:"Password"`
 }
 
-var data = make(map[string]*Event)
+type Event struct{
+	Id string
+	Title string
+	Description string
+	Name string
+	Time string
+	Timezone string
+	Duration uint32
+	Notes []string
+}
 
-func parseReq([]byte) (*Event, error) {
-	ev := Event{}
+var data = make(map[string]*Event, 1000)
+var users = make([]User,0,10000)
 
-	return &ev, nil
+func parseReq(b []byte) (*Event, error) {
+	//We Read the response body on the line below.
+
+	var ev *Event = &Event{}
+	json.Unmarshal(b, ev)
+	return ev, nil
 }
 
 func proccessReq(e *Event){
@@ -40,34 +48,79 @@ func response() string{
 	return "OK"
 }
 
-// A fundamental concept in `net/http` servers is
-// *handlers*. A handler is an object implementing the
-// `http.Handler` interface. A common way to write
 // a handler is by using the `http.HandlerFunc` adapter
 // on functions with the appropriate signature.
 func hello(w http.ResponseWriter, req *http.Request) {
-
-	// Functions serving as handlers take a
-	// `http.ResponseWriter` and a `http.Request` as
-	// arguments. The response writer is used to fill in the
-	// HTTP response. Here our simple response is just
-	// "hello\n".
 	log.Println(req.Host)
 	fmt.Fprintf(w, "hello my tyest \n")
 }
 
 func loginHandler(w http.ResponseWriter, req *http.Request) {
-	log.Println(req.Host)
-	fmt.Fprintf(w, "hello my login \n")
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	u := User{}
+	json.Unmarshal(body, &u)
+
+	fmt.Println(string(body))
+	fmt.Println(len(users))
+
+	for k, v := range users {
+		fmt.Println("asd",k, "v name: ",v.Name, "uname: ", u.Name)
+
+		if v.Name == u.Name {
+			fmt.Fprintf(w, "User {%s} already logged in1 \n", u.Name)
+			return
+		}
+
+		tmp := User{u.Name, u.Pass}
+		users = append(users, tmp)
+		fmt.Fprintf(w, "User {%s} logged in. \n", u.Name)
+		return
+	}
+
+	tmp := User{u.Name, u.Pass}
+	users = append(users, tmp)
+	fmt.Fprintf(w, "User {%s} logged in. \n", u.Name)
+	return
+}
+
+func removeElement(u []User, idx int) []User {
+	return append(u[:idx], u[idx+1:]...)
 }
 
 func logoutHandler(w http.ResponseWriter, req *http.Request) {
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		log.Fatalln(err)
+	}
 
+	u := User{}
+	json.Unmarshal(body, &u)
+
+	//fmt.Println(string(body))
+	//fmt.Println(len(users))
+
+	for idx, v := range users {
+		if v.Name == u.Name {
+			//delete  from map
+			removeElement(users, idx)
+			fmt.Fprintf(w, "User {%s} logged out \n", u.Name)
+			return
+		}
+
+		fmt.Fprintf(w, "User {%s} was not logged in. \n", u.Name)
+		return
+	}
+
+	fmt.Fprintf(w, "User {%s} was not logged in. \n", u.Name)
+	return
 }
 
 // localTime return time based on location
 func localTime(location string) int {
-
 	loc, err := time.LoadLocation("America/Chicago")
 	if err != nil {
 		panic(err)
@@ -80,15 +133,13 @@ func localTime(location string) int {
 }
 
 func eventsHandler(w http.ResponseWriter, req *http.Request) {
-
-	 b := make([]byte, 10)
+	b := make([]byte, 10)
 	data, err := parseReq(b)
 	if err != nil {
 
 	}
 
 	proccessReq(data)
-
 	fmt.Fprintf(w, response())
 }
 
@@ -117,19 +168,43 @@ func registerHandlers() {
 
 	//events GET
 	r.HandleFunc("/events", eventsHandler).Methods(http.MethodGet)
-
-	//events POST GET PUT
-	//r.HandleFunc("/api/events", eventHandler)
-	//	r.HandleFunc("/login", loginHandler)
-	//	r.HandleFunc("/logout", logoutHandler)
-	//r.HandleFunc("/products/{key}", eventHandler).Methods(http.MethodGet)
-	//r.HandleFunc("/articles/{category}/", logoutHandler)
-	//r.HandleFunc("/articles/{id}/{id:[0-9]+}", eventHandler)
 }
+
+func intiLog() {
+
+}
+
 
 func main() {
 	fmt.Println("Hello world!", localTime("Chernivtsi"))
-	registerHandlers()
+	//to do init log
+	intiLog()
 
-	http.ListenAndServe(":8090", nil)
+	//registerHandlers()
+
+	r := mux.NewRouter()
+
+	//author POST GET
+	r.HandleFunc("/hello", hello)
+
+	//user PUT
+	r.HandleFunc("/login", loginHandler)
+	r.HandleFunc("/logout", logoutHandler)
+
+	//user PUT
+	r.HandleFunc("/api/put", eventsHandler)
+
+	//events GET
+	r.HandleFunc("/events", eventsHandler).Methods(http.MethodGet)
+
+	//http.ListenAndServe(":8090", nil)
+	srv := &http.Server{
+		Handler: r,
+		Addr:    "127.0.0.1:8090",
+		// Good practice: enforce timeouts for servers you create!
+		WriteTimeout: 15 * time.Second,
+		ReadTimeout:  15 * time.Second,
+	}
+
+	log.Fatal(srv.ListenAndServe())
 }
