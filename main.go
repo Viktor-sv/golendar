@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -40,22 +41,32 @@ const configFile string = "config/config.json"
 var events = make(map[string]Event, 1000)
 var users = make([]User,0,10000)
 
-/*
-func parseReq(d []Data) (*Event, error) {
-	body, err := ioutil.ReadAll(req.Body)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	e := Event{}
-	err = json.Unmarshal(body, &e)
-	if err != nil {
-		fmt.Fprintf(w, "Unmarshal err %s \n", err.Error())
-		return
-	}
-
+type jsonPersarer interface{
+	Parse(b []byte) error
 }
-*/
+
+func (e *Event) Parse(b []byte) error{
+
+	err := json.Unmarshal(b, e)
+	return err
+}
+
+func (e *User) Parse(b []byte) error{
+
+	err := json.Unmarshal(b, e)
+	return err
+}
+
+func parseReq(req io.Reader, v jsonPersarer) ( error) {
+	body, err := ioutil.ReadAll(req)
+	if err != nil {
+		return err
+	}
+
+	err = v.Parse(body)
+	return err
+}
+
 func proccessReq(e *Event){
 
 }
@@ -77,6 +88,7 @@ func loginHandler(w http.ResponseWriter, req *http.Request) {
 		log.Fatalln(err)
 	}
 
+	//req.Body.Read()
 	u := User{}
 	err = json.Unmarshal(body, &u)
 	if err != nil {
@@ -112,13 +124,23 @@ func removeElement(u []User, idx int) []User {
 }
 
 func logoutHandler(w http.ResponseWriter, req *http.Request) {
-	body, err := ioutil.ReadAll(req.Body)
+	/*body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	u := User{}
 	json.Unmarshal(body, &u)
+
+	*/
+	u := User{}
+	e := Event{Name: "Andy"}
+	e1 := Event{}
+	err := parseReq(req.Body, &u)
+
+	if err != nil {
+		fmt.Fprintf(w, "Bad data \n")
+	}
 
 	for idx, v := range users {
 		fmt.Println("idx", idx, "v name: ",v.Name, "uname: ", u.Name)
