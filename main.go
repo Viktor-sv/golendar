@@ -9,16 +9,22 @@ import (
 	"net/http"
 	_ "os"
 	"reflect"
+	"strconv"
 	"time"
 	"unsafe"
 )
 
-type User struct{
+type Config struct {
+	Port int `json:"Port"`
+	LoggerLevel string `json:"LoggerLevel"`
+}
+
+type User struct {
 	Name string `json:"Username"`
 	Pass string `json:"Password"`
 }
 
-type Event struct{
+type Event struct {
 	Id string
 	Title string
 	Description string
@@ -29,17 +35,27 @@ type Event struct{
 	Notes []string
 }
 
-var data = make(map[string]*Event, 1000)
+const configFile string = "config/config.json"
+//var data = make(map[string]*Event, 1000)
+var events = make(map[string]Event, 1000)
 var users = make([]User,0,10000)
 
-func parseReq(b []byte) (*Event, error) {
-	//We Read the response body on the line below.
+/*
+func parseReq(d []Data) (*Event, error) {
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		log.Fatalln(err)
+	}
 
-	var ev *Event = &Event{}
-	json.Unmarshal(b, ev)
-	return ev, nil
+	e := Event{}
+	err = json.Unmarshal(body, &e)
+	if err != nil {
+		fmt.Fprintf(w, "Unmarshal err %s \n", err.Error())
+		return
+	}
+
 }
-
+*/
 func proccessReq(e *Event){
 
 }
@@ -62,7 +78,11 @@ func loginHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	u := User{}
-	json.Unmarshal(body, &u)
+	err = json.Unmarshal(body, &u)
+	if err != nil {
+		fmt.Fprintf(w, "Unmarshal err %s \n", err.Error())
+		return
+	}
 
 	fmt.Println(string(body))
 	fmt.Println(len(users))
@@ -100,10 +120,8 @@ func logoutHandler(w http.ResponseWriter, req *http.Request) {
 	u := User{}
 	json.Unmarshal(body, &u)
 
-	//fmt.Println(string(body))
-	//fmt.Println(len(users))
-
 	for idx, v := range users {
+		fmt.Println("idx", idx, "v name: ",v.Name, "uname: ", u.Name)
 		if v.Name == u.Name {
 			//delete  from map
 			removeElement(users, idx)
@@ -133,14 +151,34 @@ func localTime(location string) int {
 }
 
 func eventsHandler(w http.ResponseWriter, req *http.Request) {
-	b := make([]byte, 10)
-	data, err := parseReq(b)
+	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-
+		log.Fatalln(err)
 	}
 
-	proccessReq(data)
-	fmt.Fprintf(w, response())
+	e := Event{}
+	err = json.Unmarshal(body, &e)
+	if err != nil {
+		fmt.Fprintf(w, "Unmarshal err %s \n", err.Error())
+		return
+	}
+
+
+
+
+	fmt.Println(string(body))
+
+	if !userLoggedIn(e.Name) {
+		fmt.Fprintf(w, "User was not logged in %s \n", e.Name)
+		return
+	}
+
+	_, found := events[e.Id]
+	if  found {
+		events[e.Id] = e
+	}
+
+	return
 }
 
 //eventHandler process req  from ...
@@ -153,7 +191,7 @@ func getSliceHeader(slice *[]int) string {
 	return fmt.Sprintf("%+v", sh)
 }
 
-func registerHandlers() {
+func registerHandlers() *mux.Router {
 	r := mux.NewRouter()
 
 	//author POST GET
@@ -166,41 +204,76 @@ func registerHandlers() {
 	//user PUT
 	r.HandleFunc("/api/put", eventsHandler)
 
-	//events GET
-	r.HandleFunc("/events", eventsHandler).Methods(http.MethodGet)
+	//events GET PUT POST
+	r.HandleFunc("/api/events", eventsHandler).Methods(http.MethodGet, http.MethodPost, http.MethodPut)
+	return r
 }
 
-func intiLog() {
-
-}
-
-
-func main() {
+func intiLog()  {
 	fmt.Println("Hello world!", localTime("Chernivtsi"))
-	//to do init log
+}
+
+func userHandler(w http.ResponseWriter, req *http.Request){
+
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	u := User{}
+	json.Unmarshal(body, &u)
+
+	fmt.Println(string(body))
+
+	if !userLoggedIn(u.Name) {
+		fmt.Fprintf(w, "User {%s} not logged in. \n", u.Name)
+	}
+
+	//todo update events
+	return
+}
+
+func userLoggedIn(user string) bool{
+
+	for _, v := range users {
+		//	fmt.Println("asd",k, "v name: ",v.Name, "uname: ", u.Name)
+		if v.Name == user {
+			return true
+		}
+	}
+
+	return false
+}
+
+func readConfig() Config {
+	file, err := ioutil.ReadFile(configFile)
+	if err != nil{
+		fmt.Printf( "Config %s file not found. \n", configFile)
+	}
+
+	conf := Config{}
+
+	err = json.Unmarshal(file, &conf)
+	if err != nil{
+		 fmt.Printf("err %s", err.Error())
+	}
+
+	fmt.Println(conf)
+	return conf
+}
+
+const host string = "127.0.0.1"
+func main() {
+    //f := factory_.Factory("DB")
+	//f.WriteTo("hollo")
+
 	intiLog()
+    conf := readConfig()
 
-	//registerHandlers()
-
-	r := mux.NewRouter()
-
-	//author POST GET
-	r.HandleFunc("/hello", hello)
-
-	//user PUT
-	r.HandleFunc("/login", loginHandler)
-	r.HandleFunc("/logout", logoutHandler)
-
-	//user PUT
-	r.HandleFunc("/api/put", eventsHandler)
-
-	//events GET
-	r.HandleFunc("/events", eventsHandler).Methods(http.MethodGet)
-
-	//http.ListenAndServe(":8090", nil)
+	r := registerHandlers()
 	srv := &http.Server{
 		Handler: r,
-		Addr:    "127.0.0.1:8090",
+		Addr:    host + ":"+ strconv.Itoa(conf.Port),
 		// Good practice: enforce timeouts for servers you create!
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
