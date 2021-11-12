@@ -5,7 +5,6 @@ import (
 	"time"
 )
 
-var Lmp int32 =2
 func LocalTime(location string) error {
 	var Tmp int32 = 0
 	fmt.Println(Tmp)
