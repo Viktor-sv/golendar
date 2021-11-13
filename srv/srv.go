@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
+	//"log
 	"net/http"
 	"strconv"
 	"time"
@@ -43,7 +43,7 @@ func ReadConfig() Config {
 	fmt.Println(conf)
 	return conf
 }
-func Start(port int32) {
+func Start(port int32) error {
 
 	r := registerHandlers()
 	srv := &http.Server{
@@ -54,5 +54,11 @@ func Start(port int32) {
 		ReadTimeout:  15 * time.Second,
 	}
 
-	log.Fatal(srv.ListenAndServe())
+	//log.Fatal(srv.ListenAndServe())
+	err := srv.ListenAndServe()
+	if err != nil || err != http.ErrServerClosed {
+
+		return err
+	}
+	return nil
 }

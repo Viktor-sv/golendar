@@ -23,6 +23,9 @@ type Event struct {
 	Notes       []string
 }
 
+var Events = make(map[string]Event, 1000)
+var Users = make([]User, 0, 10000)
+
 type jsonPersarer interface {
 	Parse(b []byte) error
 }
@@ -43,9 +46,6 @@ func (i *Id) Parse(b []byte) error {
 	err := json.Unmarshal(b, i)
 	return err
 }
-
-var Events = make(map[string]Event, 1000)
-var Users = make([]User, 0, 10000)
 
 func ParseReq(req io.Reader, v jsonPersarer) error {
 	body, err := ioutil.ReadAll(req)

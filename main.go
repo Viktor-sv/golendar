@@ -2,14 +2,28 @@ package main
 
 import (
 	"calendar/srv"
+	"flag"
+	"fmt"
+	"unsafe"
 )
 
+var Version string
+
 func main() {
-	var arv int32 = 2
+	port := flag.Int("port", -1, "server port")
+	flag.Parse()
+
+	fmt.Print(Version)
+
 	conf := srv.ReadConfig()
-	if arv <= 0 {
-		conf.Port = arv
+	if *port != -1 {
+		conf.Port = int32(*port)
 	}
 
-	srv.Start(conf.Port)
+	//todo error create own error
+
+	if err := srv.Start(conf.Port); err != nil {
+		//panic(err.Error())
+	}
+
 }

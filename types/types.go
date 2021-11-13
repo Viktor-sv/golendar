@@ -7,45 +7,48 @@ type s string
 type vector []int32
 type foo func(v vector) string
 
-func (v vector) push_back(i int32){
+func (v vector) push_back(i int32) {
 
 	v = append(v, i)
 }
 
-func (v vector) size() int32{
+func (v vector) size() int32 {
 	return int32(len(v))
 }
 
-
-func (v vector) del(){
+func (v vector) del() {
 
 	return
 }
 
-func (v vector) pop() int32{
+func (v vector) pop() int32 {
 
 	return v[len(v)-1]
 }
 
-func (v vector) String() string{
+func (v vector) String() string {
 	return string(v)
 }
 
+func Slice() {
+	var sl []int
+	//fmt.Println(sl)
 
+	sl = append(sl)
+	sl = make([]int, 0, 0)
 
+	fmt.Println(sl)
 
-func sCheck (mys s, m string){
+}
+func sCheck(mys s, m string) {
 
-
-
-	muf := func (v vector) string {
+	/*	muf := func(v vector) string {
 		return ""
-	}
+	}*/
 
-	muf()
-
+	/*sl := []int
+	fmt.Println(sl)
 	var df foo = muf
-
 
 	var v vector = make([]byte,2)
 	 v.push_back(2)
@@ -65,15 +68,11 @@ func sCheck (mys s, m string){
 	v2 := make([]byte,3)
 
 	 ddd := []byte(v)
+	*/
 
-
-	fmt.Println(vector(v2))
+	//fmt.Println(vector(v2))
 
 	if mys == s(m) {
 
-
 	}
 }
-
-
-
