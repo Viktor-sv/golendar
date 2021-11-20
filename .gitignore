@@ -5,6 +5,9 @@
 *.so
 *.dylib
 
+#do not track log files
+*.log
+
 # Test binary, built with `go test -c`
 *.test
 
