@@ -11,19 +11,23 @@ const (
 	myTokenPass string = "paswdwdwdwdwdwdwd"
 )
 
-func LocalTime(location string) error {
-	var Tmp int32 = 0
-	fmt.Println(Tmp)
+const (
+	fileTimeStampFormat = "2006-01-02-15_04_05"
+)
+
+// LocalTime this func will return time in a format,
+// YYYY_MM_DD_HH_MM_SS
+func LocalTime(location string) (string, error) {
 	loc, err := time.LoadLocation(location)
 	if err != nil {
-		//panic(err)
-		return err
+		return "", err
 	}
 
 	t := time.Now().In(loc)
-	fmt.Println("%t", t)
-	fmt.Println(t)
-	return nil
+	fmt.Println(t.Format(fileTimeStampFormat))
+
+	//fmt.Println(t.Format(fileTimeStampFormat))
+	return t.Format(fileTimeStampFormat), nil
 }
 
 func UserLoggedIn(token string) bool {

@@ -15,7 +15,7 @@ import (
 func eventsHandler(w http.ResponseWriter, req *http.Request) {
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		log.Fatalln(err)
+
 	}
 
 	e := model.Event{}

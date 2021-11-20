@@ -1,17 +1,21 @@
 package srv
 
 import (
+	//"calendar/common"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
-	//"log
+	//"log"
 	"net/http"
+	//"os"
 	"strconv"
 	"time"
 )
 
 const (
-	host string = "127.0.0.1"
+	host       string = "127.0.0.1"
+	configFile string = "config/config.json"
 )
 
 type Config struct {
@@ -19,18 +23,11 @@ type Config struct {
 	LoggerLevel string `json:"LoggerLevel"`
 }
 
-const (
-	configFile string = "config/config.json"
-)
-
-func intiLog() {
-	//fmt.Println("Hello world!", common.LocalTime("Chernivtsi"))
-}
-
-func ReadConfig() Config {
+func ReadConfig() (Config, error) {
 	file, err := ioutil.ReadFile(configFile)
 	if err != nil {
 		fmt.Printf("Config %s file not found. \n", configFile)
+
 	}
 
 	conf := Config{}
@@ -38,14 +35,16 @@ func ReadConfig() Config {
 	err = json.Unmarshal(file, &conf)
 	if err != nil {
 		fmt.Printf("err %s", err.Error())
+		errors.New("unable to unmarshal config file: " + configFile)
 	}
 
 	fmt.Println(conf)
-	return conf
+	return conf, nil
 }
 func Start(port int32) error {
 
 	r := registerHandlers()
+
 	srv := &http.Server{
 		Handler: r,
 		Addr:    host + ":" + strconv.Itoa(int(port)),
@@ -54,11 +53,11 @@ func Start(port int32) error {
 		ReadTimeout:  15 * time.Second,
 	}
 
-	//log.Fatal(srv.ListenAndServe())
 	err := srv.ListenAndServe()
 	if err != nil || err != http.ErrServerClosed {
+		msg := "serve is dead!"
 
-		return err
+		panic(msg)
 	}
 	return nil
 }
