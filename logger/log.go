@@ -39,7 +39,22 @@ func (l *logger) Info(msg ...string) {
 	defer l.file.Close() //todo check if it will not crash if 'f' is nil
 
 	log.New(l.file, "INFO:\t", log.Ldate|log.Ltime).Println(msg)
+}
 
+func (l *logger) Warning(msg ...string) {
+	date, err := common.LocalTime("Europe/Kiev")
+	if err != nil {
+		//Warning.Println(":", err.Error())
+	}
+
+	path := date + "_test.log"
+	l.file, err = os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0666)
+	if err != nil {
+		//Warning.Println("cannot open file", path)
+	}
+	defer l.file.Close() //todo check if it will not crash if 'f' is nil
+
+	log.New(l.file, "WARNING:\t", log.Ldate|log.Ltime).Println(msg)
 }
 
 /*

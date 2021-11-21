@@ -1,14 +1,13 @@
 package srv
 
 import (
-	//"calendar/common"
+	"calendar/common"
+	"calendar/merror"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
-	//"log"
 	"net/http"
-	//"os"
 	"strconv"
 	"time"
 )
@@ -16,6 +15,7 @@ import (
 const (
 	host       string = "127.0.0.1"
 	configFile string = "config/config.json"
+	Identity   string = "srv"
 )
 
 type Config struct {
@@ -24,23 +24,32 @@ type Config struct {
 }
 
 func ReadConfig() (Config, error) {
-	file, err := ioutil.ReadFile(configFile)
+	date, err := common.LocalTime("Europe/Kiev")
 	if err != nil {
-		fmt.Printf("Config %s file not found. \n", configFile)
-
+		fmt.Printf("failed to get time")
 	}
 
 	conf := Config{}
+	file, err := ioutil.ReadFile(configFile)
+	if err != nil {
+		msg := "Config" + configFile + "file not found."
+		fmt.Printf(msg)
+		return conf, merror.E(date, Identity, msg)
+	}
+
+	return conf, merror.E(date, Identity, "messgase")
 
 	err = json.Unmarshal(file, &conf)
 	if err != nil {
+		msg := "unable to unmarshal config file: " + configFile
 		fmt.Printf("err %s", err.Error())
-		errors.New("unable to unmarshal config file: " + configFile)
+		errors.New(msg)
 	}
 
 	fmt.Println(conf)
 	return conf, nil
 }
+
 func Start(port int32) error {
 
 	r := registerHandlers()
