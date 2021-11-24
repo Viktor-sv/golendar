@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+
 	"fmt"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -12,58 +13,34 @@ import (
 
 const (
 	database string = "golendar"
+	IP       string = "127.0.0.1"
+	PORT     string = "3306"
 )
 
-func connectToDB() {
-
-	// Capture connection properties.
-	/*cfg := m.Config{
-		User:   "root",
-		Passwd: "mysql",
-		Net:    "tcp",
-		Addr:   "127.0.0.1:3306",
-		DBName: database,
-	}
-
-	// Get a database handle.
-	db, err := sql.Open("mysql", cfg.FormatDSN())
+func connectToDB() (*sql.DB, error) {
+	db, err := sql.Open("mysql", "root:mysql@tcp(127.0.0.1:3306)/golendar?multiStatements=true")
 	if err != nil {
-		panic(err)
+		fmt.Println("sql.Open() fail", err.Error())
+		return nil, err
 	}
 
-	pingErr := db.Ping()
-	if pingErr != nil {
+	err = db.Ping()
+	if err != nil {
 		fmt.Println("Cannot connect to database!")
+		return nil, err
 	}
 
 	fmt.Println("Connected!")
-	return db
-	*/
+	return db, nil
 }
 
 func Run() error {
-	// Capture connection properties.
-	/*cfg := m.Config{
-		User:   "root",
-		Passwd: "mysql",
-		Net:    "tcp",
-		Addr:   "127.0.0.1:3306",
-		DBName: database,
-	}*/
-
-	db, err := sql.Open("mysql", "root:mysql@tcp(127.0.0.1:3306)/golendar?multiStatements=true")
+	db, err := connectToDB()
 	if err != nil {
-		panic(err)
+		fmt.Println("error:", err.Error())
 	}
-	pingErr := db.Ping()
-	if pingErr != nil {
-		fmt.Println("Cannot connect to database!")
-	}
-
-	fmt.Println("Connected!")
 
 	driver, _ := mysql.WithInstance(db, &mysql.Config{})
-
 	m, err := migrate.NewWithDatabaseInstance(
 		"file://db/migrations",
 		"mysql",
@@ -74,7 +51,8 @@ func Run() error {
 		fmt.Println("error:", err.Error())
 	}
 
-	err = m.Steps(2)
+	//err = m.Steps(2)
+	err = m.Up()
 	if err != nil {
 		fmt.Println("m.Step(2):", err.Error())
 	}
