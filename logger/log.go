@@ -2,6 +2,8 @@ package logger
 
 import (
 	"calendar/common"
+	"fmt"
+	lrus "github.com/sirupsen/logrus"
 	"log"
 	"os"
 )
@@ -23,9 +25,20 @@ var L logger
 //called at the init package time
 func init() {
 	L = logger{file: nil}
+	// Only log the warning severity or above.
+	lrus.SetOutput(os.Stdout)
+	lrus.SetLevel(lrus.WarnLevel)
+
 }
 
+type tx int
+
 func (l *logger) Info(msg ...string) {
+	lrus.Warning("logrus warning ")
+	lrus.Info("logrus info ")
+	var x tx = 0x34
+	fmt.Println(x)
+
 	date, err := common.LocalTime("Europe/Kiev")
 	if err != nil {
 		//Warning.Println(":", err.Error())

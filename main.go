@@ -1,19 +1,29 @@
 package main
 
 import (
-	"calendar/logger"
-	"calendar/srv"
+	"calendar/db"
 	"flag"
 	"fmt"
 	"strconv"
+
+	"calendar/logger"
+	"calendar/srv"
 )
 
 var Version string
 
 func main() {
-	port := flag.Int("port", -1, "server port")
-	flag.Parse()
 	fmt.Print(Version)
+
+	port := flag.Int("port", -1, "server port")
+	m := flag.Bool("migrate", false, "run migrations")
+	flag.Parse()
+
+	if *m == false {
+		db.Run()
+		fmt.Println("run migrations")
+		return
+	}
 
 	conf, err := srv.ReadConfig()
 	if err != nil {

@@ -15,5 +15,6 @@ func (m *Merror) Error() string {
 }
 
 func E(t string, identity string, m string) *Merror {
-	return &Merror{t, identity, m} //heap allocation //todo move to stack!!!!
+	v := &Merror{t, identity, m} //heap allocation //todo move to stack!!!!
+	return v
 }
