@@ -65,7 +65,7 @@ func Run() error {
 	driver, _ := mysql.WithInstance(db, &mysql.Config{})
 
 	m, err := migrate.NewWithDatabaseInstance(
-		"file://db/migrations/",
+		"file://db/migrations",
 		"mysql",
 		driver,
 	)
@@ -74,6 +74,10 @@ func Run() error {
 		fmt.Println("error:", err.Error())
 	}
 
-	m.Steps(2)
+	err = m.Steps(2)
+	if err != nil {
+		fmt.Println("m.Step(2):", err.Error())
+	}
+
 	return err
 }
