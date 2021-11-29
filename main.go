@@ -2,7 +2,6 @@ package main
 
 import (
 	"calendar/db"
-	"calendar/model"
 	"flag"
 	"fmt"
 	"strconv"
@@ -14,21 +13,6 @@ import (
 var Version string
 
 func main() {
-	/*	u1 := &model.User{Name: "user1", Pass: "dfdrf", Token: "defrefre"}
-		u2 := &model.User{Name: "user2", Pass: "dfdrf2", Token: "defrefre2"}
-		fmt.Println(u1)
-
-		s1 := []*model.User{u1, u2}
-
-		s2 := &[]model.User{*u1, *u2}
-
-		fmt.Println(s1)
-		fmt.Println(s2)
-	*/
-	/*s1 := make([]model.User,1)
-	s2 := make([]model.User,1)
-	*/
-
 	fmt.Print(Version)
 
 	port := flag.Int("port", -1, "server port")
