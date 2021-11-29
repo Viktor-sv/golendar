@@ -1,0 +1,1 @@
+ALTER TABLE users ADD COLUMN loggedin varchar(200) AFTER token;
