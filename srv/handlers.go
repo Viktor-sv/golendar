@@ -2,6 +2,7 @@ package srv
 
 import (
 	"calendar/common"
+	"calendar/db"
 	"calendar/model"
 	"context"
 	"encoding/json"
@@ -99,6 +100,12 @@ func loginHandler(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		fmt.Fprintf(w, "err %s \n", err.Error())
 		return
+	}
+
+	urs := db.GetUsers()
+	for _, v := range urs {
+		fmt.Println(v.Name)
+
 	}
 
 	w.Header().Add("Content-Type", " application/json")
