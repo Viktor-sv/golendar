@@ -37,17 +37,7 @@ func ReadConfig() (Config, error) {
 		fmt.Printf(msg)
 		return conf, merror.E(date, Identity, msg)
 	}
-	/*
-		runtime.ReadMemStats(&mem)
-		//runtime.ReadMemStats(&m1)
 
-		merror.E(date, Identity, "messgase egtrtryrtyrtdfgdgfgre5465")
-		//t3 := map[int]string{1: "x"}
-
-		runtime.ReadMemStats(&m1)
-
-		fmt.Println(m1.HeapAlloc - mem.HeapAlloc)
-	*/
 	err = json.Unmarshal(file, &conf)
 	if err != nil {
 		msg := "unable to unmarshal config file: " + configFile
@@ -78,12 +68,6 @@ func Start(port int32) error {
 		panic(msg)
 	}
 	return nil
-}
-
-func memUsage(m1, m2 *runtime.MemStats) {
-	p("Alloc:", m2.Alloc-m1.Alloc,
-		"TotalAlloc:", m2.TotalAlloc-m1.TotalAlloc,
-		"HeapAlloc:", m2.HeapAlloc-m1.HeapAlloc)
 }
 
 var p = fmt.Println
