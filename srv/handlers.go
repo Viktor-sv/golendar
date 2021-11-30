@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 )
 
 func eventsHandler(w http.ResponseWriter, req *http.Request) {
@@ -62,6 +63,10 @@ func putEventHandler(w http.ResponseWriter, request *http.Request) {
 }
 
 func logoutHandler(w http.ResponseWriter, req *http.Request) {
+
+	tokenHeader := req.Header.Get("Authorization") //get token
+	token := strings.Split(tokenHeader, " ")[1]
+
 	v := req.Context().Value("id")
 
 	if v != nil {
@@ -72,22 +77,47 @@ func logoutHandler(w http.ResponseWriter, req *http.Request) {
 		log.Println()
 	}
 
-	u := model.User{}
-	err := model.ParseReq(req.Body, &u)
+	user := model.User{}
+	user.Token = token
+
+	err := model.ParseReq(req.Body, &user)
 	if err != nil {
 		fmt.Fprintf(w, "Bad data \n")
 	}
 
-	for idx, v := range model.Users {
-		fmt.Println("idx", idx, "v name: ", v.Name, "uname: ", u.Name)
-		if v.Name == u.Name {
-			RemoveElement(model.Users, idx)
-			fmt.Fprintf(w, "User {%s} logged out \n", u.Name)
-			return
-		}
+	err = db.LogOut(&user)
+	if err != nil {
+		fmt.Println("log out error", err.Error())
 	}
 
-	fmt.Fprintf(w, "User {%s} was not logged in. \n", u.Name)
+	fmt.Fprintf(w, "User {%s} was not logged in. \n", user.Name)
+	return
+}
+
+func registrationHandlers(w http.ResponseWriter, req *http.Request) {
+	user := model.User{}
+	model.ParseReq(req.Body, &user)
+
+	/*	user.Token = GenToken(&user)
+		b, err := json.Marshal(user)
+		if err != nil {
+			fmt.Fprintf(w, "err %s \n", err.Error())
+		}*/
+
+	u := db.GetUser(user.Name, user.Pass)
+	if u == nil {
+		db.Add(user)
+		w.Header().Add("Content-Type", " application/json")
+		fmt.Fprintf(w, "db.Add(user) \n")
+		return
+	}
+
+	if u.Name == user.Name && user.Pass == u.Pass {
+		fmt.Println("user already logged in")
+	}
+
+	w.Header().Add("Content-Type", " application/json")
+
 	return
 }
 
@@ -102,14 +132,29 @@ func loginHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	urs := db.GetUsers()
-	for _, v := range urs {
-		fmt.Println(v.Name)
-
+	bu := db.GetUser(u.Name, u.Pass)
+	if bu == nil {
+		msg := "user not registered"
+		fmt.Println(msg)
+		fmt.Fprintf(w, msg)
+		return
 	}
 
+	if u.Name == bu.Name && bu.Pass == u.Pass {
+		fmt.Println("user already logged in")
+	}
+
+	err = db.LoginUser(u)
+	if err != nil {
+		fmt.Println("error", err.Error())
+	}
+
+	msg := "db.LoginUser" + u.Name
+	fmt.Println(msg)
 	w.Header().Add("Content-Type", " application/json")
+
 	fmt.Fprintf(w, string(b))
+	fmt.Fprintf(w, msg)
 	return
 }
 
@@ -128,15 +173,17 @@ func userHandler(w http.ResponseWriter, req *http.Request) {
 		fmt.Fprintf(w, "User {%s} not logged in. \n", u.Name)
 	}
 
-	//todo update events
 	return
 }
 
 func registerHandlers() *mux.Router {
 	r := mux.NewRouter()
 
-	//user PUT
+	//user POST
+	r.HandleFunc("/registration", registrationHandlers)
 	r.HandleFunc("/login", loginHandler)
+
+	//user GET
 	r.HandleFunc("/logout", auth(logoutHandler))
 
 	//user PUT

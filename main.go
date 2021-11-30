@@ -5,6 +5,8 @@ import (
 	"flag"
 	"fmt"
 	"strconv"
+	"sync"
+	"sync/atomic"
 
 	"calendar/logger"
 	"calendar/srv"
@@ -13,6 +15,34 @@ import (
 var Version string
 
 func main() {
+	var wg sync.WaitGroup
+	var data int32
+
+	//var mx sync.Mutex
+	//	var rwmx sync.RWMutex
+
+	for i := 1; i <= 1000; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			/*rwmx.Lock()// 0x45454 l
+			defer rwmx.Unlock()
+			data = data + 1*/
+			atomic.AddInt32(&data, 1)
+
+		}()
+	}
+
+	wg.Wait()
+
+	if data == 0 {
+		fmt.Printf("----------------------------the value is %v.\n", data)
+	} else {
+		fmt.Printf("----------------------------the value is %v.\n", data)
+
+	}
+
 	fmt.Print(Version)
 
 	port := flag.Int("port", -1, "server port")
