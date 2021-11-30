@@ -31,7 +31,9 @@ func LocalTime(location string) (string, error) {
 }
 
 func UserLoggedIn(token string) bool {
+	fmt.Printf("tokeng. %s \n", token)
 	t, err := ParseToken(token)
+	fmt.Printf("parsed tokeng. %s \n", t)
 	if err != nil {
 		fmt.Printf("error parsing tokeng. %s \n", err)
 		return false
@@ -68,5 +70,5 @@ func ParseToken(tokenS string) (string, error) {
 		fmt.Println("token not valid: ")
 	}
 
-	return "", nil
+	return token.Raw, nil
 }
