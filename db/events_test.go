@@ -17,7 +17,9 @@ func Test_addTwoNum(t *testing.T) {
 		{name: "mytest", args: struct {
 			x int
 			y int
-		}{x: 2, y: 5}, want: 7},
+		}{x: 2, y: 5},
+			want: 7},
+
 		{name: "mytest2", args: struct {
 			x int
 			y int

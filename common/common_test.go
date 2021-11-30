@@ -10,8 +10,10 @@ func TestParseToken(t *testing.T) {
 		want    string
 		wantErr bool
 	}{
-		// TODO: Add test cases.
-		{name: "mytest", token: "my_token", want: "dsfdf", wantErr: true},
+		{name: "Andy",
+			token:   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlbmRhciIsInN1YiI6IkFuZHkifQ.TcqvtFjryWm2O9SoHhXjftgSW_K5WAdk9Fcxx6EEgVw",
+			want:    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnb2xlbmRhciIsInN1YiI6IkFuZHkifQ.TcqvtFjryWm2O9SoHhXjftgSW_K5WAdk9Fcxx6EEgVw",
+			wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
