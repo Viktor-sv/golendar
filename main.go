@@ -1,12 +1,18 @@
 package main
 
 import (
+	"calendar/adder"
+	"calendar/api/proto"
 	"calendar/db"
 	"flag"
 	"fmt"
+	"log"
+	"net"
+	//"os"
 	"strconv"
 	"sync"
-	"sync/atomic"
+	//"sync/atomic"
+	"google.golang.org/grpc"
 
 	"calendar/logger"
 	"calendar/srv"
@@ -14,35 +20,69 @@ import (
 
 var Version string
 
-func main() {
-	var wg sync.WaitGroup
-	var data int32
+func readCH(c chan int) {
 
-	//var mx sync.Mutex
-	//	var rwmx sync.RWMutex
+	for {
+		r, ok := <-c
+		fmt.Println("r:", r, " ok:", ok)
 
-	for i := 1; i <= 1000; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-
-			/*rwmx.Lock()// 0x45454 l
-			defer rwmx.Unlock()
-			data = data + 1*/
-			atomic.AddInt32(&data, 1)
-
-		}()
+		if ok == false {
+			return
+		}
 	}
+}
 
+func writeCH(i ...int) chan int {
+	ch := make(chan int)
+
+	go func() {
+		defer close(ch)
+		for _, val := range i {
+			ch <- val
+
+		}
+	}()
+
+	return ch
+}
+
+func test() {
+	c := writeCH(1, 2, 34, 5, 6, 6)
+	readCH(c)
+}
+
+func g(wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	s := grpc.NewServer()
+	sr := &adder.GRPCServer{}
+
+	proto.RegisterAdderServer(s, sr)
+
+	l, err := net.Listen("tcp", "127.0.0.1:8080")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	fmt.Println("sercer")
+	if err := s.Serve(l); err != nil {
+		log.Fatalln(err)
+	}
+}
+
+func main() {
+	/*	cha := make(chan int)
+		<-cha*/
+	//c := writeCH(1, 2, 34, 5, 6, 6)
+	//readCH(c)
+	//os.Exit(0)
+
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+	go g(&wg)
 	wg.Wait()
 
-	if data == 0 {
-		fmt.Printf("----------------------------the value is %v.\n", data)
-	} else {
-		fmt.Printf("----------------------------the value is %v.\n", data)
-
-	}
-
+	fmt.Println("main")
 	fmt.Print(Version)
 
 	port := flag.Int("port", -1, "server port")
