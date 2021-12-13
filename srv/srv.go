@@ -3,13 +3,18 @@ package srv
 import (
 	"calendar/common"
 	"calendar/merror"
+
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"runtime"
+	"os"
+	"os/signal"
+	//"runtime"
 	"strconv"
+	"syscall"
 	"time"
 )
 
@@ -50,9 +55,10 @@ func ReadConfig() (Config, error) {
 }
 
 func Start(port int32) error {
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
 	r := registerHandlers()
-
 	srv := &http.Server{
 		Handler: r,
 		Addr:    host + ":" + strconv.Itoa(int(port)),
@@ -61,15 +67,21 @@ func Start(port int32) error {
 		ReadTimeout:  15 * time.Second,
 	}
 
-	err := srv.ListenAndServe()
-	if err != nil || err != http.ErrServerClosed {
-		msg := "serve is dead!"
+	go func() {
+		err := srv.ListenAndServe()
+		if err != nil && err != http.ErrServerClosed {
+			msg := "serve is dead!\n " + err.Error()
+			panic(msg)
+		}
+	}()
 
-		panic(msg)
+	fmt.Print("Server Started\n")
+
+	<-sigs
+	fmt.Print("Server Stopped\n")
+	if err := srv.Shutdown(context.Background()); err != nil {
+		fmt.Println("http server Shutdown failed!")
 	}
+
 	return nil
 }
-
-var p = fmt.Println
-
-var m1, m2, mem runtime.MemStats
