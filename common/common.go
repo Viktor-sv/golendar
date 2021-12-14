@@ -1,7 +1,8 @@
 package common
 
 import (
-	"calendar/model"
+	"calendar/db"
+	"context"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"time"
@@ -31,7 +32,7 @@ func LocalTime(location string) (string, error) {
 }
 
 func UserLoggedIn(token string) bool {
-	fmt.Printf("tokeng. %s \n", token)
+	fmt.Printf("UserLoggedIn: entering. %s \n", token)
 	t, err := ParseToken(token)
 	fmt.Printf("parsed tokeng. %s \n", t)
 	if err != nil {
@@ -39,15 +40,22 @@ func UserLoggedIn(token string) bool {
 		return false
 	}
 
-	for _, v := range model.Users {
+	users := db.GetUsers()
+	_, cancel := context.WithTimeout(context.Background(), time.Second)
+	//context.WithCancel(context.Background())
+	cancel()
+
+	for _, v := range users {
+
 		v, _ := ParseToken(v.Token)
+		fmt.Println(v[0:10], " - ", t[0:10])
 		if t == v {
-			fmt.Printf("tokens are the same. \n")
+			fmt.Printf("UserLoggedIn: tokens are the same. \n")
 			return true
 		}
 	}
 
-	fmt.Printf("tokens are not the same. \n")
+	fmt.Printf("UserLoggedIn: tokens are not the same. \n")
 	return false
 }
 

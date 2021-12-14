@@ -23,6 +23,19 @@ type Event struct {
 	Notes       []string
 }
 
+var myslice []int32
+
+func GetNews() error {
+	for 10000000000 {
+		myslice = append(myslice, 1)
+	}
+	return nil
+}
+
+func GetSlice() *[]int32 {
+	return &myslice
+}
+
 var Events = make(map[string]Event, 1000)
 var Users = make([]User, 0, 10000)
 

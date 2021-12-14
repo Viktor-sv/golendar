@@ -7,8 +7,10 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"net"
 	"path/filepath"
+	"time"
 
 	"bufio"
 	"google.golang.org/grpc"
@@ -161,19 +163,40 @@ func apiServer(w *sync.WaitGroup) {
 	srv.Start(conf.Port)
 }
 
+func getNews() []int {
+	var tmpSlice []int
+	//sl.connect
+	//sql query ("select * from tebale")
+	for i := 0; i < 10; i++ {
+		tmpSlice = append(tmpSlice, i)
+
+	}
+	return tmpSlice
+}
+
+func f4() {
+	sl := getNews()
+	fmt.Println(sl)
+
+}
+
 func main() {
+	sl := getNews()
+
+	//client(sl)
+	//server()
 	fmt.Println("main")
 	fmt.Print(Version)
 	fmt.Println("threads:", runtime.GOMAXPROCS(-1))
 	//runTwoGo()
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go gRPC(&wg)
-	wg.Add(1)
-	go apiServer(&wg)
-	wg.Wait()
-
+	/*	var wg sync.WaitGroup
+		wg.Add(1)
+		go gRPC(&wg)
+		wg.Add(1)
+		go apiServer(&wg)
+		wg.Wait()
+	*/
 	/*	var int getter
 		var s myS
 		var mmap *myMapType
@@ -188,6 +211,69 @@ func main() {
 	/*println("main started")
 	logWc()
 	println("main finished")*/
+
+	fmt.Println(">>>>> BEGIN")
+
+	// ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	// Cancel even if everything goes fine without an error to release resources.
+	// defer cancel()
+	// ch := make(chan int)
+	// go doSomething(ch)
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go f1(&wg) //wg.Done()
+	go f2()    //wg.Done() -1
+	go f3()    //wg.Done() -1
+
+	wg.Wait()
+
+	/*	go func() {
+			defer wg.Done() //-1
+			select {
+			case <-ctx.Done():
+				fmt.Println("TIMEOUT:", ctx.Err())
+
+			case t := <-ch:
+				fmt.Printf("JOB DONE in %d seconds\n", t)
+			}
+		}()
+
+		time.Sleep(time.Duration(2) * time.Second)
+		cancel()
+
+
+		time.Sleep(time.Duration(2) * time.Second)
+	*/
+
+	fmt.Println(">>>>> END")
+}
+
+func f1(wg *sync.WaitGroup) {
+	defer wg.Done()
+	fmt.Println(" *wg go go go")
+}
+
+func f2() {
+	//defer wg.Done()
+	fmt.Println("wg go go go")
+}
+
+func f3() {
+	//defer wg.Done()
+	fmt.Println("wg go go go")
+}
+
+func doSomething(ch chan<- int) {
+	// Prevent picking up the same random number all the time for sleeping.
+	rand.Seed(time.Now().UnixNano())
+
+	// Pick a random number to simulate time it takes to finish the job.
+	delay := rand.Intn(5)
+	fmt.Printf("RUN: %d seconds\n", delay)
+	time.Sleep(time.Duration(8) * time.Second)
+
+	ch <- delay
 }
 
 func logWc() {

@@ -55,7 +55,7 @@ func LogOut(u *model.User) error {
 	}
 
 	fmt.Println("user: ", u)
-	res, err1 := db.Exec("update users set  loggedin=? where name=? and loggedin=?", "", u.Name, u.Token)
+	res, err1 := db.Exec("update users set  token=? where name=? and token=?", "", u.Name, u.Token)
 	fmt.Println(res)
 	if err1 != nil {
 		fmt.Println("connect to db error ", err.Error())
@@ -70,11 +70,12 @@ func LoginUser(u model.User) error {
 		fmt.Println("connect to db error ", err.Error())
 	}
 
-	_, err = db.Exec("update users set loggedin=? where name=? and pass=?", u.Token, u.Name, u.Pass)
+	_, err = db.Exec("update users set token=? where name=? and pass=?", u.Token, u.Name, u.Pass)
 	if err != nil {
 		fmt.Println("connect to db error ", err.Error())
 	}
 
+	fmt.Printf("use[%s] was logged in with token:[%s]\n", u.Name, u.Token)
 	return nil
 }
 
