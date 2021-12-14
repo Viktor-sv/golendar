@@ -2,7 +2,6 @@ package common
 
 import (
 	"calendar/db"
-	"context"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"time"
@@ -41,15 +40,15 @@ func UserLoggedIn(token string) bool {
 	}
 
 	users := db.GetUsers()
-	_, cancel := context.WithTimeout(context.Background(), time.Second)
-	//context.WithCancel(context.Background())
-	cancel()
-
 	for _, v := range users {
 
-		v, _ := ParseToken(v.Token)
-		fmt.Println(v[0:10], " - ", t[0:10])
-		if t == v {
+		/*		v, err := ParseToken(v.Token)
+				if err != nil {
+					fmt.Printf("err\n", err.Error())
+					return false
+				}*/
+
+		if token == v.Token {
 			fmt.Printf("UserLoggedIn: tokens are the same. \n")
 			return true
 		}
@@ -71,7 +70,7 @@ func ParseToken(tokenS string) (string, error) {
 	})
 
 	if err != nil {
-		return "error: ", err
+		return "", err
 	}
 
 	if !token.Valid {

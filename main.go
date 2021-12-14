@@ -181,8 +181,6 @@ func f4() {
 }
 
 func main() {
-	sl := getNews()
-
 	//client(sl)
 	//server()
 	fmt.Println("main")
@@ -190,13 +188,13 @@ func main() {
 	fmt.Println("threads:", runtime.GOMAXPROCS(-1))
 	//runTwoGo()
 
-	/*	var wg sync.WaitGroup
-		wg.Add(1)
-		go gRPC(&wg)
-		wg.Add(1)
-		go apiServer(&wg)
-		wg.Wait()
-	*/
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go gRPC(&wg)
+	wg.Add(1)
+	go apiServer(&wg)
+	wg.Wait()
+
 	/*	var int getter
 		var s myS
 		var mmap *myMapType
@@ -212,41 +210,63 @@ func main() {
 	logWc()
 	println("main finished")*/
 
-	fmt.Println(">>>>> BEGIN")
-
 	// ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	// Cancel even if everything goes fine without an error to release resources.
 	// defer cancel()
 	// ch := make(chan int)
 	// go doSomething(ch)
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go f1(&wg) //wg.Done()
-	go f2()    //wg.Done() -1
-	go f3()    //wg.Done() -1
+	/*	var wg sync.WaitGroup
+		wg.Add(1)
+		go f1(&wg) //wg.Done()
+		go f2()    //wg.Done() -1
+		go f3()    //wg.Done() -1
 
-	wg.Wait()
-
+		wg.Wait()
+	*/
 	/*	go func() {
 			defer wg.Done() //-1
 			select {
 			case <-ctx.Done():
 				fmt.Println("TIMEOUT:", ctx.Err())
-
 			case t := <-ch:
 				fmt.Printf("JOB DONE in %d seconds\n", t)
 			}
 		}()
-
 		time.Sleep(time.Duration(2) * time.Second)
 		cancel()
-
-
 		time.Sleep(time.Duration(2) * time.Second)
 	*/
+	/*
+		var dialAddr = flag.String("dial", "localhost:8000", "host:port to dial")
 
-	fmt.Println(">>>>> END")
+		type Message struct {
+			Body string
+		}
+
+		flag.Parse()
+
+		conn, err := net.Dial("tcp", *dialAddr)
+
+		if err != nil {
+			fmt.Println("connan connect to ", conn.RemoteAddr().String())
+		}
+
+		s := bufio.NewScanner(os.Stdin)
+		for s.Scan() {
+			m := Message{Body: s.Text()}
+			bytes, err := json.Marshal(m)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			conn.Write(bytes)
+		}
+
+		if err := s.Err(); err != nil {
+			log.Fatal(err)
+		}
+	*/
 }
 
 func f1(wg *sync.WaitGroup) {

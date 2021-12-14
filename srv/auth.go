@@ -22,7 +22,7 @@ func auth(h http.HandlerFunc) http.HandlerFunc {
 		request = request.WithContext(c)
 
 		//fmt.Printf("before http handler %s", token)
-		if common.UserLoggedIn(token) {
+		if !common.UserLoggedIn(token) {
 			fmt.Println(writer, "user not authorized")
 			return
 		}

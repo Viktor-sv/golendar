@@ -25,7 +25,7 @@ func GetUsers() []model.User {
 		fmt.Println("connect to db error ", err.Error())
 	}
 
-	res, err := db.Query("SELECT name,pass FROM users")
+	res, err := db.Query("SELECT name,pass,token FROM users")
 	if err != nil {
 		fmt.Println("select error ", err.Error())
 	}
@@ -33,7 +33,7 @@ func GetUsers() []model.User {
 	var users []model.User
 	for res.Next() {
 		var u model.User
-		err = res.Scan(&u.Name, &u.Pass)
+		err = res.Scan(&u.Name, &u.Pass, &u.Token)
 		if err != nil {
 			fmt.Println("select error ", err.Error())
 			continue

@@ -49,6 +49,17 @@ func getEventHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func postEventHandler(w http.ResponseWriter, req *http.Request) {
+	event := model.Event{}
+	model.ParseReq(req.Body, &event)
+
+	e := db.GetEvent(event.Id)
+	if nil == e {
+		db.AddE(event)
+		w.Header().Add("Content-Type", " application/json")
+		fmt.Fprintf(w, "db.Add(user) \n")
+		return
+	}
+
 }
 
 func putEventHandler(w http.ResponseWriter, request *http.Request) {
@@ -97,12 +108,6 @@ func logoutHandler(w http.ResponseWriter, req *http.Request) {
 func registrationHandlers(w http.ResponseWriter, req *http.Request) {
 	user := model.User{}
 	model.ParseReq(req.Body, &user)
-
-	/*	user.Token = GenToken(&user)
-		b, err := json.Marshal(user)
-		if err != nil {
-			fmt.Fprintf(w, "err %s \n", err.Error())
-		}*/
 
 	u := db.GetUser(user.Name, user.Pass)
 	if u == nil {
@@ -189,13 +194,14 @@ func registerHandlers() *mux.Router {
 	//user PUT
 	r.HandleFunc("/api/user", auth(userHandler))
 
-	//user PUT
+	//user GET
 	r.HandleFunc("/api/events", auth(eventsHandler))
 
 	//events GET PUT POST
-	r.HandleFunc("/api/event", auth(getEventHandler)).Methods(http.MethodGet)
-	r.HandleFunc("/api/event/{id}", auth(postEventHandler)).Methods(http.MethodPost)
+	r.HandleFunc("/api/event/{id}", auth(getEventHandler)).Methods(http.MethodGet)
 	r.HandleFunc("/api/event/{id}", auth(putEventHandler)).Methods(http.MethodPut)
+	r.HandleFunc("/api/event", auth(postEventHandler)).Methods(http.MethodPost)
+
 	return r
 }
 
