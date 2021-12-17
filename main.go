@@ -4,12 +4,15 @@ import (
 	"calendar/adder"
 	"calendar/api/proto"
 	"calendar/db"
+	"context"
 	"flag"
 	"fmt"
 	"log"
 	"math/rand"
 	"net"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 	"time"
 
 	"bufio"
@@ -105,7 +108,7 @@ func test() {
 	readCH(c)
 }
 
-func gRPC(wg *sync.WaitGroup) {
+func gRPC(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	s := grpc.NewServer()
@@ -117,14 +120,20 @@ func gRPC(wg *sync.WaitGroup) {
 	if err != nil {
 		log.Fatalln(err)
 	}
+	go func() {
+		fmt.Println("gRPC server started!")
+		if err := s.Serve(l); err != nil {
+			log.Fatalln(err)
+		}
+	}()
 
-	fmt.Println("gRPC server started!")
-	if err := s.Serve(l); err != nil {
-		log.Fatalln(err)
-	}
+	<-ctx.Done()
+	s.GracefulStop()
+	fmt.Print("Server Stopped\n")
+
 }
 
-func apiServer(w *sync.WaitGroup) {
+func apiServer(ctx context.Context, w *sync.WaitGroup) {
 	defer w.Done()
 	port := flag.Int("port", -1, "server port")
 	m := flag.Bool("migrate", false, "run migrations")
@@ -160,7 +169,7 @@ func apiServer(w *sync.WaitGroup) {
 		}
 	}()
 
-	srv.Start(conf.Port)
+	srv.Start(ctx, conf.Port)
 }
 
 func getNews() []int {
@@ -181,6 +190,14 @@ func f4() {
 }
 
 func main() {
+	var m sync.Map
+	{
+	}
+	m.Load("k")
+	m.Store("k", "ki")
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
 	//client(sl)
 	//server()
 	fmt.Println("main")
@@ -190,20 +207,22 @@ func main() {
 
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go gRPC(&wg)
-	wg.Add(1)
-	go apiServer(&wg)
-	wg.Wait()
 
+	ctx, c := context.WithCancel(context.Background())
+
+	go gRPC(ctx, &wg)
+	wg.Add(1)
+	go apiServer(ctx, &wg)
+	//wg.Wait()
+
+	<-sigs
+	c()
 	/*	var int getter
 		var s myS
 		var mmap *myMapType
-
 		int = mmap
 		int = s
-
 		if int != nil {
-
 		}*/
 
 	/*println("main started")
